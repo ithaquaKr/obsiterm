@@ -1,90 +1,61 @@
-# Obsidian Sample Plugin
+# Obsiterm
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+A native terminal emulator panel for [Obsidian](https://obsidian.md). Desktop only.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- **Bottom panel** — VS Code-style terminal panel that persists while you navigate notes
+- **Floating modal** — quick-access terminal overlay
+- **Multiple tabs** — open and switch between independent shell sessions
+- **Theme-matched colors** — reads Obsidian's CSS variables; updates automatically when you switch dark/light mode
+- **In-terminal search** — search through terminal output
+- **Clickable URLs** — web links in terminal output open in your browser
+- **Configurable** — shell path, font, font size, cursor style, scrollback, and more
 
-## First time developing plugins?
+## Installation
 
-Quick starting guide for new plugin devs:
+### Manual
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+1. Download `main.js`, `manifest.json`, and `styles.css` from the latest [release](https://github.com/ithaqua/obsiterm/releases).
+2. Copy them to `<Vault>/.obsidian/plugins/obsiterm/`.
+3. Copy the `node-pty` native binary for your platform from `node_modules/node-pty/prebuilds/<platform>/` into the same folder.
+4. Enable **Obsiterm** in Obsidian → Settings → Community plugins.
 
-## Releasing new releases
+## Usage
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+| Action | Default |
+|---|---|
+| Toggle terminal panel | Command palette → *Toggle terminal panel* |
+| Open floating terminal | Command palette → *Open floating terminal* |
+| New tab | `+` button in the tab strip |
+| Close tab | `×` button on the tab |
+| Search output | `⌕` button in the toolbar |
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+Assign hotkeys in Settings → Hotkeys → search "terminal".
 
-## Adding your plugin to the community plugin list
+## Settings
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+Open Settings → Obsiterm:
 
-## How to use
+- **Shell path** — leave blank to auto-detect (`$SHELL` on macOS/Linux, `powershell.exe` on Windows)
+- **Font family / Font size** — terminal font; changes apply immediately
+- **Cursor style** — block, underline, or bar
+- **Cursor blink** — toggle cursor blinking
+- **Scrollback lines** — how many lines to keep in history
+- **Default layout** — panel or floating
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+## Development
 
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+```bash
+npm install      # install dependencies
+npm run dev      # watch mode (compiles src/ → main.js with sourcemaps)
+npm run build    # type-check + production build
+npm run lint     # ESLint
 ```
 
-If you have multiple URLs, you can also do:
+After building, copy `main.js`, `manifest.json`, and `styles.css` to your vault's plugin folder and reload Obsidian.
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+## Requirements
 
-## API Documentation
-
-See https://docs.obsidian.md
+- Obsidian **desktop** (macOS, Windows, Linux)
+- Node.js v16+ (for development)

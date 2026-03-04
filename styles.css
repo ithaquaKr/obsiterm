@@ -1,8 +1,205 @@
-/*
+/* ===== Obsiterm Plugin Styles ===== */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+/* Container fills the ItemView content area */
+.obsiterm-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	background-color: var(--background-primary);
+}
 
-If your plugin does not need CSS, delete this file.
+/* Toolbar */
+.obsiterm-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 6px;
+	background-color: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+}
 
-*/
+.obsiterm-toolbar-btn {
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-size: 14px;
+	line-height: 1;
+}
+
+.obsiterm-toolbar-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+/* Tab strip */
+.obsiterm-tabs {
+	display: flex;
+	align-items: stretch;
+	background-color: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+	overflow-x: auto;
+}
+
+.obsiterm-tabs::-webkit-scrollbar {
+	height: 3px;
+}
+.obsiterm-tabs::-webkit-scrollbar-thumb {
+	background-color: var(--scrollbar-thumb-bg);
+	border-radius: 2px;
+}
+
+.obsiterm-tab {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 10px;
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: 12px;
+	white-space: nowrap;
+	border-bottom: 2px solid transparent;
+	transition: color 0.1s, border-color 0.1s;
+}
+
+.obsiterm-tab:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+}
+
+.obsiterm-tab.is-active {
+	color: var(--text-normal);
+	border-bottom-color: var(--interactive-accent);
+}
+
+.obsiterm-tab-label {
+	user-select: none;
+}
+
+.obsiterm-tab-close {
+	color: var(--text-faint);
+	font-size: 14px;
+	line-height: 1;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.obsiterm-tab-close:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+}
+
+.obsiterm-tab-add {
+	display: flex;
+	align-items: center;
+	padding: 4px 10px;
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: 16px;
+	line-height: 1;
+	border-bottom: 2px solid transparent;
+}
+
+.obsiterm-tab-add:hover {
+	color: var(--text-normal);
+	background-color: var(--background-modifier-hover);
+}
+
+/* Search bar */
+.obsiterm-search-bar {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 8px;
+	background-color: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+	height: 30px;
+	box-sizing: border-box;
+}
+
+.obsiterm-search-input {
+	flex: 1;
+	height: 22px;
+	min-width: 0;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	color: var(--text-normal);
+	padding: 0 6px;
+	font-size: 12px;
+	line-height: 22px;
+	outline: none;
+	box-sizing: border-box;
+	resize: none;
+}
+
+.obsiterm-search-input:focus {
+	border-color: var(--interactive-accent);
+}
+
+/* Utility: hide element (plugin-scoped to avoid Obsidian class conflicts) */
+.obsiterm-hidden {
+	display: none !important;
+}
+
+/* Modal size override */
+.obsiterm-modal {
+	width: 70vw;
+	height: 50vh;
+}
+
+/* Terminal container fills remaining height */
+.obsiterm-terminal-container {
+	flex: 1;
+	overflow: hidden;
+	position: relative;
+}
+
+/* xterm wrapper fills its container */
+.obsiterm-xterm-wrapper {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.obsiterm-xterm-wrapper .xterm {
+	height: 100%;
+	padding: 4px;
+}
+
+.obsiterm-xterm-wrapper .xterm-viewport {
+	overflow-y: scroll;
+}
+
+.obsiterm-xterm-wrapper .xterm-viewport::-webkit-scrollbar {
+	width: 8px;
+}
+
+.obsiterm-xterm-wrapper .xterm-viewport::-webkit-scrollbar-thumb {
+	background-color: var(--scrollbar-thumb-bg);
+	border-radius: 4px;
+}
+
+.obsiterm-xterm-wrapper .xterm-viewport::-webkit-scrollbar-track {
+	background-color: transparent;
+}
+
+/* Modal variant */
+.obsiterm-modal-content {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	padding: 0;
+}
+
+.obsiterm-modal-content .obsiterm-xterm-wrapper {
+	flex: 1;
+}

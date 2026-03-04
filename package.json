@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsiterm",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "A native terminal emulator panel for Obsidian.",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
@@ -24,6 +24,10 @@
 		"jiti": "2.6.1"
 	},
 	"dependencies": {
+		"@xterm/addon-fit": "^0.10.0",
+		"@xterm/addon-search": "^0.15.0",
+		"@xterm/addon-web-links": "^0.11.0",
+		"@xterm/xterm": "^5.5.0",
 		"obsidian": "latest"
 	}
 }

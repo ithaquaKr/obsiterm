@@ -1,99 +1,76 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
-import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
+import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { DEFAULT_SETTINGS, OBSITermSettings, OBSITermSettingTab } from './settings';
+import { TERMINAL_PANEL_VIEW, TerminalView } from './terminal/TerminalView';
+import { TerminalModal } from './terminal/TerminalModal';
 
-// Remember to rename these classes and interfaces!
+export default class ObsitermPlugin extends Plugin {
+	settings: OBSITermSettings;
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
-
-	async onload() {
+	async onload(): Promise<void> {
 		await this.loadSettings();
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
+		// Register the bottom-panel view
+		this.registerView(
+			TERMINAL_PANEL_VIEW,
+			(leaf: WorkspaceLeaf) => new TerminalView(leaf, this),
+		);
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
-
-		// This adds a simple command that can be triggered anywhere
+		// Command: toggle bottom panel
 		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
+			id: 'toggle-terminal-panel',
+			name: 'Toggle terminal panel',
+			callback: () => { void this.toggleTerminalPanel(); },
 		});
-		// This adds an editor command that can perform some operation on the current editor instance
+
+		// Command: open floating terminal
 		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				editor.replaceSelection('Sample editor command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-				return false;
-			}
+			id: 'toggle-floating-terminal',
+			name: 'Open floating terminal',
+			callback: () => new TerminalModal(this.app, this).open(),
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			new Notice("Click");
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-
+		// Settings tab
+		this.addSettingTab(new OBSITermSettingTab(this.app, this));
 	}
 
-	onunload() {
+	onunload(): void {
+		// Detach any open terminal panel leaves (disposes via onClose)
+		this.app.workspace.getLeavesOfType(TERMINAL_PANEL_VIEW).forEach(l => l.detach());
 	}
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<MyPluginSettings>);
+	async loadSettings(): Promise<void> {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<OBSITermSettings>);
 	}
 
-	async saveSettings() {
+	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 	}
-}
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
+	/** Propagate settings changes to all open terminal views. */
+	notifySettingsChanged(): void {
+		this.app.workspace.getLeavesOfType(TERMINAL_PANEL_VIEW).forEach(leaf => {
+			const view = leaf.view;
+			if (view instanceof TerminalView) view.onSettingsChange();
+		});
 	}
 
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
+	private async toggleTerminalPanel(): Promise<void> {
+		const existing = this.app.workspace.getLeavesOfType(TERMINAL_PANEL_VIEW);
 
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
+		if (existing.length > 0) {
+			const leaf = existing[0]!;
+			if (this.app.workspace.getActiveViewOfType(TerminalView)) {
+				leaf.detach();
+			} else {
+				await this.app.workspace.revealLeaf(leaf);
+				leaf.view.containerEl.focus();
+			}
+			return;
+		}
+
+		// Open a new bottom leaf
+		const leaf = this.app.workspace.getLeaf('split');
+		await leaf.setViewState({ type: TERMINAL_PANEL_VIEW, active: true });
+		await this.app.workspace.revealLeaf(leaf);
 	}
 }
