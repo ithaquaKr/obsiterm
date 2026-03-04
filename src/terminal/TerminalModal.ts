@@ -1,4 +1,4 @@
-import { App, Modal } from 'obsidian';
+import { App, Hotkey, Modal } from 'obsidian';
 import type ObsitermPlugin from '../main';
 import { TerminalInstance } from './TerminalInstance';
 import { detectDefaultShell } from '../utils/shell';
@@ -9,7 +9,11 @@ export class TerminalModal extends Modal {
 	private resizeObserver: ResizeObserver | null = null;
 	private stopWatchingTheme: (() => void) | null = null;
 
-	constructor(app: App, private readonly plugin: ObsitermPlugin) {
+	constructor(
+		app: App,
+		private readonly plugin: ObsitermPlugin,
+		private readonly onClosed?: () => void,
+	) {
 		super(app);
 	}
 
@@ -21,10 +25,7 @@ export class TerminalModal extends Modal {
 
 		const shellPath = this.plugin.settings.shellPath || detectDefaultShell();
 		// contentEl is already in the DOM — pass it so xterm can measure on open
-		this.instance = new TerminalInstance(this.plugin.settings, shellPath, contentEl);
-
-		// Fit after DOM settles
-		requestAnimationFrame(() => this.instance?.fit());
+		this.instance = new TerminalInstance(this.plugin.settings, shellPath, contentEl, this.plugin.pluginDir);
 
 		// Watch theme
 		this.stopWatchingTheme = watchTheme((theme) => {
@@ -36,6 +37,19 @@ export class TerminalModal extends Modal {
 			this.instance?.fit();
 		});
 		this.resizeObserver.observe(contentEl);
+
+		// Register the toggle hotkey on the modal's scope so it fires even when
+		// xterm has focus (the modal scope otherwise blocks global commands).
+		const commandId = `${this.plugin.manifest.id}:toggle-floating-terminal`;
+		// hotkeyManager is not in Obsidian's public typings but exists at runtime
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const hotkeys: Hotkey[] = (this.app as any).hotkeyManager?.getHotkeys(commandId) ?? [];
+		for (const hk of hotkeys) {
+			this.scope.register(hk.modifiers, hk.key, () => {
+				this.close();
+				return false;
+			});
+		}
 	}
 
 	onClose(): void {
@@ -44,5 +58,6 @@ export class TerminalModal extends Modal {
 		this.instance?.dispose();
 		this.instance = null;
 		this.contentEl.empty();
+		this.onClosed?.();
 	}
 }

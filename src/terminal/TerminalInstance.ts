@@ -21,6 +21,7 @@ export class TerminalInstance {
 		private readonly settings: OBSITermSettings,
 		shellPath: string,
 		container: HTMLElement,
+		private readonly pluginDir: string,
 	) {
 		// Attach to DOM FIRST so xterm can measure real pixel dimensions
 		this.element = document.createElement('div');
@@ -45,17 +46,32 @@ export class TerminalInstance {
 		this.terminal.loadAddon(new WebLinksAddon());
 
 		this.terminal.open(this.element);
-		this.fitAddon.fit();
 
-		// Spawn PTY — wrapped so a missing binary shows a helpful message
-		// rather than crashing the whole view
+		// Defer fit + PTY spawn to the next frame so the container's CSS
+		// dimensions are fully applied before we measure cols/rows.
+		requestAnimationFrame(() => {
+			if (this.disposed) return;
+			this.fitAddon.fit();
+			this.spawnPty(shellPath);
+		});
+	}
+
+	private spawnPty(shellPath: string): void {
 		try {
+			// Load from the plugin's own node_modules using the absolute path
+			// supplied by Obsidian's FileSystemAdapter — __dirname is unreliable
+			// in Electron's renderer and points to electron.asar, not the plugin.
 			// eslint-disable-next-line @typescript-eslint/no-require-imports
-			const nodePty = require('node-pty') as typeof import('node-pty');
+			const pathMod = require('path') as typeof import('path');
+			// eslint-disable-next-line @typescript-eslint/no-require-imports
+			const nodePty = require(pathMod.join(this.pluginDir, 'node_modules', 'node-pty')) as typeof import('node-pty');
 			const cols = this.terminal.cols > 0 ? this.terminal.cols : 80;
 			const rows = this.terminal.rows > 0 ? this.terminal.rows : 24;
 
-			this.pty = nodePty.spawn(shellPath, [], {
+			// Spawn as a login shell (-l) so ~/.zprofile / ~/.bash_profile are
+			// sourced and tools installed via Homebrew are on the PATH.
+			// This matches what VS Code and iTerm2 do on macOS.
+			this.pty = nodePty.spawn(shellPath, ['-l'], {
 				name: 'xterm-color',
 				cols,
 				rows,

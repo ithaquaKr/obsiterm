@@ -1,41 +1,46 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { FileSystemAdapter, Plugin, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS, OBSITermSettings, OBSITermSettingTab } from './settings';
 import { TERMINAL_PANEL_VIEW, TerminalView } from './terminal/TerminalView';
 import { TerminalModal } from './terminal/TerminalModal';
+import { TerminalManager, TabChangeCallback } from './terminal/TerminalManager';
 
 export default class ObsitermPlugin extends Plugin {
 	settings: OBSITermSettings;
 
+	// Persisted for the plugin's lifetime — survives view show/hide cycles
+	private _manager: TerminalManager | null = null;
+	private _modal: TerminalModal | null = null;
+
 	async onload(): Promise<void> {
 		await this.loadSettings();
 
-		// Register the bottom-panel view
 		this.registerView(
 			TERMINAL_PANEL_VIEW,
 			(leaf: WorkspaceLeaf) => new TerminalView(leaf, this),
 		);
 
-		// Command: toggle bottom panel
 		this.addCommand({
 			id: 'toggle-terminal-panel',
 			name: 'Toggle terminal panel',
 			callback: () => { void this.toggleTerminalPanel(); },
 		});
 
-		// Command: open floating terminal
 		this.addCommand({
 			id: 'toggle-floating-terminal',
-			name: 'Open floating terminal',
-			callback: () => new TerminalModal(this.app, this).open(),
+			name: 'Toggle floating terminal',
+			callback: () => this.toggleFloatingTerminal(),
 		});
 
-		// Settings tab
 		this.addSettingTab(new OBSITermSettingTab(this.app, this));
 	}
 
 	onunload(): void {
-		// Detach any open terminal panel leaves (disposes via onClose)
+		this._modal?.close();
+		this._modal = null;
+		// Detach all leaves first (triggers onClose on each view)
 		this.app.workspace.getLeavesOfType(TERMINAL_PANEL_VIEW).forEach(l => l.detach());
+		this._manager?.disposeAll();
+		this._manager = null;
 	}
 
 	async loadSettings(): Promise<void> {
@@ -46,12 +51,42 @@ export default class ObsitermPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	/** Propagate settings changes to all open terminal views. */
+	getOrCreateManager(onTabChange: TabChangeCallback): TerminalManager {
+		if (!this._manager) {
+			this._manager = new TerminalManager(this.settings, this.pluginDir, onTabChange);
+		} else {
+			this._manager.setOnTabChange(onTabChange);
+		}
+		return this._manager;
+	}
+
+	/** Called by TerminalView.onClose() when the user explicitly closes the leaf. */
+	onTerminalViewClosed(): void {
+		this._manager?.disposeAll();
+		this._manager = null;
+	}
+
 	notifySettingsChanged(): void {
-		this.app.workspace.getLeavesOfType(TERMINAL_PANEL_VIEW).forEach(leaf => {
-			const view = leaf.view;
-			if (view instanceof TerminalView) view.onSettingsChange();
-		});
+		this._manager?.applySettings(this.settings);
+	}
+
+	get pluginDir(): string {
+		const adapter = this.app.vault.adapter;
+		const dir = this.manifest.dir ?? `.obsidian/plugins/${this.manifest.id}`;
+		if (adapter instanceof FileSystemAdapter) {
+			return adapter.getBasePath() + '/' + dir;
+		}
+		return dir;
+	}
+
+	private toggleFloatingTerminal(): void {
+		if (this._modal) {
+			this._modal.close();
+			// _modal is nulled by the onClosed callback
+			return;
+		}
+		this._modal = new TerminalModal(this.app, this, () => { this._modal = null; });
+		this._modal.open();
 	}
 
 	private async toggleTerminalPanel(): Promise<void> {
@@ -59,16 +94,22 @@ export default class ObsitermPlugin extends Plugin {
 
 		if (existing.length > 0) {
 			const leaf = existing[0]!;
+
 			if (this.app.workspace.getActiveViewOfType(TerminalView)) {
-				leaf.detach();
+				// Terminal is active — shift focus back to the editor
+				const mdLeaves = this.app.workspace.getLeavesOfType('markdown');
+				const target = mdLeaves[0];
+				if (target) {
+					this.app.workspace.setActiveLeaf(target, { focus: true });
+				}
 			} else {
+				// Terminal exists but not focused — bring it up
 				await this.app.workspace.revealLeaf(leaf);
-				leaf.view.containerEl.focus();
 			}
 			return;
 		}
 
-		// Open a new bottom leaf
+		// No terminal leaf exists yet — create one
 		const leaf = this.app.workspace.getLeaf('split');
 		await leaf.setViewState({ type: TERMINAL_PANEL_VIEW, active: true });
 		await this.app.workspace.revealLeaf(leaf);

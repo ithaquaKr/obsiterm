@@ -1,6 +1,11 @@
-/* ===== Obsiterm Plugin Styles ===== */
+/* ===== Obsiterm — VS Code-style terminal panel ===== */
 
-/* Container fills the ItemView content area */
+/* Hide Obsidian's built-in view header (nav arrows, title) for the terminal panel */
+.workspace-leaf-content[data-type="obsiterm-panel"] .view-header {
+	display: none;
+}
+
+/* Root container fills the ItemView content area */
 .obsiterm-container {
 	display: flex;
 	flex-direction: column;
@@ -9,160 +14,166 @@
 	background-color: var(--background-primary);
 }
 
-/* Toolbar */
-.obsiterm-toolbar {
+/* ── Header ──────────────────────────────────────────────────────────────── */
+/* Single row: [tab pills ···] [actions] */
+.obsiterm-header {
 	display: flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 6px;
+	align-items: stretch;
+	flex-shrink: 0;
+	height: 35px;
 	background-color: var(--background-secondary);
 	border-bottom: 1px solid var(--background-modifier-border);
-	flex-shrink: 0;
 }
 
-.obsiterm-toolbar-btn {
-	background: none;
-	border: none;
-	color: var(--text-muted);
-	cursor: pointer;
-	padding: 2px 6px;
-	border-radius: 4px;
-	font-size: 14px;
-	line-height: 1;
-}
-
-.obsiterm-toolbar-btn:hover {
-	background-color: var(--background-modifier-hover);
-	color: var(--text-normal);
-}
-
-/* Tab strip */
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
 .obsiterm-tabs {
 	display: flex;
 	align-items: stretch;
-	background-color: var(--background-secondary);
-	border-bottom: 1px solid var(--background-modifier-border);
-	flex-shrink: 0;
+	flex: 1;
 	overflow-x: auto;
+	overflow-y: hidden;
+	min-width: 0;
 }
 
-.obsiterm-tabs::-webkit-scrollbar {
-	height: 3px;
-}
+.obsiterm-tabs::-webkit-scrollbar { height: 2px; }
 .obsiterm-tabs::-webkit-scrollbar-thumb {
 	background-color: var(--scrollbar-thumb-bg);
-	border-radius: 2px;
+	border-radius: 1px;
 }
 
 .obsiterm-tab {
 	display: flex;
 	align-items: center;
-	gap: 4px;
-	padding: 4px 10px;
+	gap: 5px;
+	padding: 0 10px 0 12px;
+	min-width: 100px;
+	max-width: 200px;
 	cursor: pointer;
 	color: var(--text-muted);
 	font-size: 12px;
 	white-space: nowrap;
-	border-bottom: 2px solid transparent;
-	transition: color 0.1s, border-color 0.1s;
+	position: relative;
+	border-right: 1px solid transparent;
+	user-select: none;
+	transition: background-color 0.1s, color 0.1s;
+}
+
+/* Accent bar on top of active tab */
+.obsiterm-tab::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background-color: transparent;
+	transition: background-color 0.1s;
 }
 
 .obsiterm-tab:hover {
-	color: var(--text-normal);
 	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
 }
 
 .obsiterm-tab.is-active {
+	background-color: var(--background-primary);
 	color: var(--text-normal);
-	border-bottom-color: var(--interactive-accent);
+	border-right-color: var(--background-modifier-border);
 }
 
-.obsiterm-tab-label {
-	user-select: none;
+.obsiterm-tab.is-active::before {
+	background-color: var(--interactive-accent);
 }
 
+.obsiterm-tab-icon {
+	font-family: monospace;
+	font-size: 11px;
+	color: var(--interactive-accent);
+	flex-shrink: 0;
+}
+
+.obsiterm-tab-name {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Close button: hidden until tab hovered or active */
 .obsiterm-tab-close {
-	color: var(--text-faint);
-	font-size: 14px;
+	flex-shrink: 0;
+	width: 16px;
+	height: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 3px;
+	font-size: 13px;
 	line-height: 1;
-	padding: 0 2px;
-	border-radius: 2px;
+	color: var(--text-faint);
+	opacity: 0;
+	transition: opacity 0.1s, background-color 0.1s;
+}
+
+.obsiterm-tab:hover .obsiterm-tab-close,
+.obsiterm-tab.is-active .obsiterm-tab-close {
+	opacity: 1;
 }
 
 .obsiterm-tab-close:hover {
-	color: var(--text-normal);
-	background-color: var(--background-modifier-hover);
+	background-color: var(--background-modifier-error);
+	color: var(--text-error);
 }
 
-.obsiterm-tab-add {
+/* ── Header action buttons (right side) ──────────────────────────────────── */
+.obsiterm-header-actions {
 	display: flex;
 	align-items: center;
-	padding: 4px 10px;
-	cursor: pointer;
-	color: var(--text-muted);
-	font-size: 16px;
-	line-height: 1;
-	border-bottom: 2px solid transparent;
-}
-
-.obsiterm-tab-add:hover {
-	color: var(--text-normal);
-	background-color: var(--background-modifier-hover);
-}
-
-/* Search bar */
-.obsiterm-search-bar {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 4px;
-	padding: 3px 8px;
-	background-color: var(--background-secondary);
-	border-bottom: 1px solid var(--background-modifier-border);
+	padding: 0 4px;
+	gap: 1px;
 	flex-shrink: 0;
-	height: 30px;
-	box-sizing: border-box;
+	border-left: 1px solid var(--background-modifier-border);
 }
 
-.obsiterm-search-input {
-	flex: 1;
-	height: 22px;
-	min-width: 0;
-	background-color: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
+.obsiterm-action-btn {
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	width: 26px;
+	height: 26px;
+	padding: 0;
 	border-radius: 4px;
+	font-size: 14px;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 0.1s, color 0.1s;
+}
+
+.obsiterm-action-btn:hover {
+	background-color: var(--background-modifier-hover);
 	color: var(--text-normal);
-	padding: 0 6px;
-	font-size: 12px;
-	line-height: 22px;
-	outline: none;
-	box-sizing: border-box;
-	resize: none;
 }
 
-.obsiterm-search-input:focus {
-	border-color: var(--interactive-accent);
+/* ── Terminal area ───────────────────────────────────────────────────────── */
+/* Fills remaining height; position:relative for the search overlay */
+.obsiterm-terminal-area {
+	flex: 1;
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
 }
 
-/* Utility: hide element (plugin-scoped to avoid Obsidian class conflicts) */
-.obsiterm-hidden {
-	display: none !important;
-}
-
-/* Modal size override */
-.obsiterm-modal {
-	width: 70vw;
-	height: 50vh;
-}
-
-/* Terminal container fills remaining height */
 .obsiterm-terminal-container {
 	flex: 1;
 	overflow: hidden;
 	position: relative;
 }
 
-/* xterm wrapper fills its container */
+/* xterm element fills the container */
 .obsiterm-xterm-wrapper {
 	width: 100%;
 	height: 100%;
@@ -171,27 +182,103 @@
 
 .obsiterm-xterm-wrapper .xterm {
 	height: 100%;
-	padding: 4px;
+	padding: 2px 4px;
 }
 
-.obsiterm-xterm-wrapper .xterm-viewport {
-	overflow-y: scroll;
-}
-
+/* Scrollbar — match VS Code style */
 .obsiterm-xterm-wrapper .xterm-viewport::-webkit-scrollbar {
-	width: 8px;
+	width: 10px;
 }
 
 .obsiterm-xterm-wrapper .xterm-viewport::-webkit-scrollbar-thumb {
 	background-color: var(--scrollbar-thumb-bg);
-	border-radius: 4px;
+	border-radius: 5px;
+	border: 2px solid transparent;
+	background-clip: content-box;
 }
 
 .obsiterm-xterm-wrapper .xterm-viewport::-webkit-scrollbar-track {
 	background-color: transparent;
 }
 
-/* Modal variant */
+/* ── Search overlay ──────────────────────────────────────────────────────── */
+/* Floats in top-right corner of the terminal area — no layout shift */
+.obsiterm-search-overlay {
+	position: absolute;
+	top: 6px;
+	right: 12px;
+	z-index: 100;
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 5px;
+	padding: 3px 4px;
+	box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+}
+
+.obsiterm-search-input {
+	width: 200px;
+	height: 24px;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 3px;
+	color: var(--text-normal);
+	padding: 0 8px;
+	font-size: 12px;
+	outline: none;
+	box-sizing: border-box;
+	font-family: inherit;
+}
+
+.obsiterm-search-input:focus {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.obsiterm-search-btn {
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border-radius: 3px;
+	font-size: 13px;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 0.1s, color 0.1s;
+}
+
+.obsiterm-search-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.obsiterm-search-close {
+	font-size: 15px;
+}
+
+/* ── Utility ─────────────────────────────────────────────────────────────── */
+.obsiterm-hidden {
+	display: none !important;
+}
+
+/* ── Floating modal variant ──────────────────────────────────────────────── */
+.obsiterm-modal {
+	width: 70vw;
+	height: 50vh;
+}
+
+/* Hide Obsidian's built-in modal close button — we use Escape / toggle hotkey */
+.obsiterm-modal .modal-close-button {
+	display: none;
+}
+
 .obsiterm-modal-content {
 	display: flex;
 	flex-direction: column;

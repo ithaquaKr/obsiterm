@@ -3,9 +3,7 @@ import { TerminalInstance } from './TerminalInstance';
 import { detectDefaultShell } from '../utils/shell';
 import { resolveTheme } from '../utils/theme';
 
-export interface TabChangeCallback {
-	(tabs: TerminalInstance[], activeIndex: number): void;
-}
+export type TabChangeCallback = (tabs: TerminalInstance[], activeIndex: number) => void;
 
 export class TerminalManager {
 	readonly tabs: TerminalInstance[] = [];
@@ -15,9 +13,15 @@ export class TerminalManager {
 
 	constructor(
 		private readonly settings: OBSITermSettings,
+		private readonly pluginDir: string,
 		onTabChange: TabChangeCallback,
 	) {
 		this.onTabChange = onTabChange;
+	}
+
+	/** Update the tab-change callback when the view is recreated. */
+	setOnTabChange(cb: TabChangeCallback): void {
+		this.onTabChange = cb;
 	}
 
 	get activeTab(): TerminalInstance | undefined {
@@ -26,15 +30,27 @@ export class TerminalManager {
 
 	create(container: HTMLElement): TerminalInstance {
 		const shellPath = this.settings.shellPath || detectDefaultShell();
-		// container is passed in so the element is in the DOM before xterm opens
-		const instance = new TerminalInstance(this.settings, shellPath, container);
+		const instance = new TerminalInstance(this.settings, shellPath, container, this.pluginDir);
 		instance.applyTheme(resolveTheme());
 
 		this.tabs.push(instance);
-
-		// Hide all others, show the new one
 		this.switchTo(this.tabs.length - 1);
 		return instance;
+	}
+
+	/**
+	 * Re-attach all existing terminal elements to a new container after the
+	 * view has been closed and reopened. Sessions are not interrupted.
+	 */
+	reattach(container: HTMLElement): void {
+		for (let i = 0; i < this.tabs.length; i++) {
+			const tab = this.tabs[i]!;
+			tab.element.classList.toggle('obsiterm-hidden', i !== this.activeIndex);
+			container.appendChild(tab.element);
+		}
+		// Fit after layout so the new container's dimensions are settled
+		requestAnimationFrame(() => this.activeTab?.fit());
+		this.onTabChange(this.tabs, this.activeIndex);
 	}
 
 	switchTo(index: number): void {
@@ -45,7 +61,6 @@ export class TerminalManager {
 		const active = this.tabs[index];
 		if (active) {
 			active.focus();
-			// Fit after showing, in case dimensions changed while hidden
 			requestAnimationFrame(() => active.fit());
 		}
 		this.onTabChange(this.tabs, this.activeIndex);
@@ -64,9 +79,7 @@ export class TerminalManager {
 			return;
 		}
 
-		// Pick a sensible next active tab
-		const nextIndex = Math.min(index, this.tabs.length - 1);
-		this.switchTo(nextIndex);
+		this.switchTo(Math.min(index, this.tabs.length - 1));
 	}
 
 	applyTheme(theme: import('@xterm/xterm').ITheme): void {

@@ -8,11 +8,13 @@
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"lint": "eslint ."
+		"lint": "eslint .",
+		"rebuild:pty": "node scripts/rebuild-pty.mjs"
 	},
 	"keywords": [],
 	"license": "0-BSD",
 	"devDependencies": {
+		"@electron/rebuild": "^3.6.0",
 		"@types/node": "^16.11.6",
 		"esbuild": "0.25.5",
 		"eslint-plugin-obsidianmd": "0.1.9",
@@ -28,6 +30,7 @@
 		"@xterm/addon-search": "^0.15.0",
 		"@xterm/addon-web-links": "^0.11.0",
 		"@xterm/xterm": "^5.5.0",
+		"node-pty": "^1.0.0",
 		"obsidian": "latest"
 	}
 }

@@ -9,16 +9,13 @@ function shellLabel(shellPath: string): string {
 export class TerminalTabs {
 	readonly element: HTMLElement;
 
-	private onAdd: () => void;
 	private onClose: (index: number) => void;
 	private onSwitch: (index: number) => void;
 
 	constructor(opts: {
-		onAdd: () => void;
 		onClose: (index: number) => void;
 		onSwitch: (index: number) => void;
 	}) {
-		this.onAdd = opts.onAdd;
 		this.onClose = opts.onClose;
 		this.onSwitch = opts.onSwitch;
 
@@ -29,15 +26,20 @@ export class TerminalTabs {
 	render(tabs: TerminalInstance[], activeIndex: number, shellPath: string): void {
 		this.element.empty();
 
+		const label = shellLabel(shellPath);
+
 		tabs.forEach((_, i) => {
 			const tab = this.element.createEl('div', { cls: 'obsiterm-tab' });
 			if (i === activeIndex) tab.classList.add('is-active');
 
+			// Shell icon
+			tab.createEl('span', { text: '$', cls: 'obsiterm-tab-icon' });
+			// Shell name
 			tab.createEl('span', {
-				text: shellLabel(shellPath) + (tabs.length > 1 ? ` ${i + 1}` : ''),
-				cls: 'obsiterm-tab-label',
+				text: tabs.length > 1 ? `${label} ${i + 1}` : label,
+				cls: 'obsiterm-tab-name',
 			});
-
+			// Close — always in DOM, shown on hover/active via CSS
 			const closeBtn = tab.createEl('span', { text: '×', cls: 'obsiterm-tab-close' });
 
 			tab.addEventListener('click', (e) => {
@@ -48,9 +50,5 @@ export class TerminalTabs {
 				this.onClose(i);
 			});
 		});
-
-		// "+" new tab button
-		const addBtn = this.element.createEl('div', { cls: 'obsiterm-tab-add', text: '+' });
-		addBtn.addEventListener('click', () => this.onAdd());
 	}
 }
