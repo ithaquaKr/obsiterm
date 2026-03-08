@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf } from "obsidian";
+import { ItemView, WorkspaceLeaf, setIcon } from "obsidian";
 import type ObsitermPlugin from "../main";
 import type { TerminalManager } from "./TerminalManager";
 import { TerminalTabs } from "../ui/TerminalTabs";
@@ -61,15 +61,15 @@ export class TerminalView extends ItemView {
 
 		const newTabBtn = actions.createEl("button", {
 			cls: "obsiterm-action-btn",
-			text: "+",
 			attr: { "aria-label": "New terminal", title: "New terminal" },
 		});
+		setIcon(newTabBtn, "plus");
 
 		const searchToggle = actions.createEl("button", {
 			cls: "obsiterm-action-btn",
-			text: "⌕",
 			attr: { "aria-label": "Search", title: "Search (Ctrl+F)" },
 		});
+		setIcon(searchToggle, "search");
 
 		// ── Terminal area ───────────────────────────────────────────────────────
 		const terminalArea = root.createEl("div", {
@@ -91,21 +91,20 @@ export class TerminalView extends ItemView {
 		});
 		const prevBtn = this.searchOverlay.createEl("button", {
 			cls: "obsiterm-search-btn",
-			text: "↑",
 			attr: { title: "Previous match (Shift+Enter)" },
 		});
+		setIcon(prevBtn, "chevron-up");
 		const nextBtn = this.searchOverlay.createEl("button", {
 			cls: "obsiterm-search-btn",
-			text: "↓",
-			attr: { title: "Next match (enter)" },
+			attr: { title: "Next match (Enter)" },
 		});
-		this.searchOverlay
-			.createEl("button", {
-				cls: "obsiterm-search-btn obsiterm-search-close",
-				text: "×",
-				attr: { title: "Close" },
-			})
-			.addEventListener("click", () => this.hideSearch());
+		setIcon(nextBtn, "chevron-down");
+		const searchClose = this.searchOverlay.createEl("button", {
+			cls: "obsiterm-search-btn obsiterm-search-close",
+			attr: { title: "Close" },
+		});
+		setIcon(searchClose, "x");
+		searchClose.addEventListener("click", () => this.hideSearch());
 
 		// ── Manager ────────────────────────────────────────────────────────────
 		// Get or create the shared manager. If sessions already exist, reattach
@@ -169,8 +168,11 @@ export class TerminalView extends ItemView {
 	async onClose(): Promise<void> {
 		this.stopWatchingTheme?.();
 		this.resizeObserver?.disconnect();
-		// User explicitly closed the leaf — dispose sessions and release the manager.
-		this.plugin.onTerminalViewClosed();
+		// Sessions are NOT disposed here. The manager (and all PTY processes)
+		// outlive the view — they are owned by the plugin and only cleaned up
+		// by plugin.onunload() or when the user explicitly closes a tab (×).
+		// xterm elements become detached DOM nodes but remain referenced by
+		// TerminalInstance.element, so reattach() can move them back on next onOpen().
 	}
 
 	onSettingsChange(): void {

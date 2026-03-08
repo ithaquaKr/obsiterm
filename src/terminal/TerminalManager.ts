@@ -39,8 +39,9 @@ export class TerminalManager {
 	}
 
 	/**
-	 * Re-attach all existing terminal elements to a new container after the
-	 * view has been closed and reopened. Sessions are not interrupted.
+	 * Re-attach all existing terminal elements to a new container.
+	 * Called when the view is reopened after being closed — PTY sessions
+	 * have been running the whole time; only the DOM parent changes.
 	 */
 	reattach(container: HTMLElement): void {
 		for (let i = 0; i < this.tabs.length; i++) {
@@ -48,8 +49,11 @@ export class TerminalManager {
 			tab.element.classList.toggle('obsiterm-hidden', i !== this.activeIndex);
 			container.appendChild(tab.element);
 		}
-		// Fit after layout so the new container's dimensions are settled
-		requestAnimationFrame(() => this.activeTab?.fit());
+		// Two rAF passes: first lets the browser compute layout for the new
+		// container; second lets xterm's renderer react to the size change.
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => this.activeTab?.refresh());
+		});
 		this.onTabChange(this.tabs, this.activeIndex);
 	}
 

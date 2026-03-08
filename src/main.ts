@@ -37,10 +37,11 @@ export default class ObsitermPlugin extends Plugin {
 	onunload(): void {
 		this._modal?.close();
 		this._modal = null;
-		// Detach all leaves first (triggers onClose on each view)
-		this.app.workspace.getLeavesOfType(TERMINAL_PANEL_VIEW).forEach(l => l.detach());
+		// Dispose sessions first, then detach leaves.
+		// onClose() on each view does NOT touch sessions, so order is safe.
 		this._manager?.disposeAll();
 		this._manager = null;
+		this.app.workspace.getLeavesOfType(TERMINAL_PANEL_VIEW).forEach(l => l.detach());
 	}
 
 	async loadSettings(): Promise<void> {
@@ -58,12 +59,6 @@ export default class ObsitermPlugin extends Plugin {
 			this._manager.setOnTabChange(onTabChange);
 		}
 		return this._manager;
-	}
-
-	/** Called by TerminalView.onClose() when the user explicitly closes the leaf. */
-	onTerminalViewClosed(): void {
-		this._manager?.disposeAll();
-		this._manager = null;
 	}
 
 	notifySettingsChanged(): void {

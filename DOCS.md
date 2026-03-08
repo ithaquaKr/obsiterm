@@ -45,10 +45,10 @@ The glue between xterm and node-pty is two event listeners:
 
 ```ts
 // Shell → screen
-pty.onData(data => terminal.write(data));
+pty.onData((data) => terminal.write(data));
 
 // Keyboard → shell
-terminal.onData(data => pty.write(data));
+terminal.onData((data) => pty.write(data));
 ```
 
 Everything else in the codebase is plumbing around these two lines.
@@ -132,6 +132,7 @@ WorkspaceLeaf
 ```
 
 Key lifecycle methods:
+
 - `onOpen()` — called when the leaf becomes visible; set up DOM + manager
 - `onClose()` — called when the leaf is destroyed (user presses ×)
 
@@ -209,8 +210,8 @@ what xterm renders — output will wrap at wrong column widths.
 ### SearchAddon
 
 ```ts
-searchAddon.findNext('query', { caseSensitive: false, regex: false });
-searchAddon.findPrevious('query');
+searchAddon.findNext("query", { caseSensitive: false, regex: false });
+searchAddon.findPrevious("query");
 ```
 
 Highlights matches directly in the terminal buffer. The floating search
@@ -230,12 +231,12 @@ output, and window-resize signals.
 ### Spawning
 
 ```ts
-const pty = nodePty.spawn('/bin/zsh', ['-l'], {
-  name: 'xterm-color',  // $TERM — tells shell what escape codes to use
-  cols: 120,
-  rows: 30,
-  cwd: process.env['HOME'],
-  env: process.env,
+const pty = nodePty.spawn("/bin/zsh", ["-l"], {
+ name: "xterm-color", // $TERM — tells shell what escape codes to use
+ cols: 120,
+ rows: 30,
+ cwd: process.env["HOME"],
+ env: process.env,
 });
 ```
 
@@ -250,7 +251,7 @@ add themselves. Without `-l`, commands like `brew`, `node`, `python` are
 When the container changes size, you must signal the PTY:
 
 ```ts
-pty.resize(cols, rows);  // sends SIGWINCH to the shell process
+pty.resize(cols, rows); // sends SIGWINCH to the shell process
 ```
 
 The shell reads the new size via `ioctl(TIOCGWINSZ)` and redraws.
@@ -300,7 +301,7 @@ get pluginDir(): string {
 Then load node-pty with the absolute path:
 
 ```ts
-const nodePty = require(path.join(this.pluginDir, 'node_modules', 'node-pty'));
+const nodePty = require(path.join(this.pluginDir, "node_modules", "node-pty"));
 ```
 
 ### Native addon ABI compatibility
@@ -363,6 +364,7 @@ and open a new one. The `onClosed` callback passed to `TerminalModal` nulls
 Wraps one `Terminal` (xterm) + one `IPty` (node-pty).
 
 **Constructor sequence:**
+
 1. Create `.obsiterm-xterm-wrapper` div and append to container (DOM first!)
 2. Create `Terminal` and load addons
 3. Call `terminal.open(element)` to render the canvas
@@ -390,7 +392,7 @@ regular DOM element and can be moved with `appendChild` just like any other node
 ```ts
 // Sessions keep running; only the DOM parent changes
 for (const tab of this.tabs) {
-  container.appendChild(tab.element);
+ container.appendChild(tab.element);
 }
 ```
 
@@ -414,7 +416,7 @@ hidden via CSS:
 
 ```css
 .workspace-leaf-content[data-type="obsiterm-panel"] .view-header {
-  display: none;
+ display: none;
 }
 ```
 
@@ -434,12 +436,13 @@ Fix: look up the user's configured hotkeys and register them directly on
 `this.scope`:
 
 ```ts
-const hotkeys: Hotkey[] = (this.app as any).hotkeyManager?.getHotkeys(commandId) ?? [];
+const hotkeys: Hotkey[] =
+ (this.app as any).hotkeyManager?.getHotkeys(commandId) ?? [];
 for (const hk of hotkeys) {
-  this.scope.register(hk.modifiers, hk.key, () => {
-    this.close();
-    return false;  // stop propagation
-  });
+ this.scope.register(hk.modifiers, hk.key, () => {
+  this.close();
+  return false; // stop propagation
+ });
 }
 ```
 
@@ -459,12 +462,12 @@ by default and becomes visible on hover via CSS, matching VS Code's behavior.
 ```ts
 // Important: check which element was clicked to avoid
 // triggering "switch tab" when the close button is pressed
-tab.addEventListener('click', (e) => {
-  if (e.target !== closeBtn) this.onSwitch(i);
+tab.addEventListener("click", (e) => {
+ if (e.target !== closeBtn) this.onSwitch(i);
 });
-closeBtn.addEventListener('click', (e) => {
-  e.stopPropagation();   // don't bubble to tab click
-  this.onClose(i);
+closeBtn.addEventListener("click", (e) => {
+ e.stopPropagation(); // don't bubble to tab click
+ this.onClose(i);
 });
 ```
 
@@ -489,7 +492,10 @@ xterm instances.
 
 ```ts
 const observer = new MutationObserver(() => onThemeChange(resolveTheme()));
-observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+observer.observe(document.body, {
+ attributes: true,
+ attributeFilter: ["class"],
+});
 ```
 
 **Deep dive:** [MDN MutationObserver](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) · [xterm ITheme](https://xtermjs.org/docs/api/terminal/interfaces/itheme/)
@@ -538,8 +544,8 @@ have unintended side effects. Use `.obsiterm-hidden` with `display: none !import
 treats the string as a single class name `"foo bar"`. Use separate `classList.add()` calls:
 
 ```ts
-const el = parent.createEl('div', { cls: 'obsiterm-search-overlay' });
-el.classList.add('obsiterm-hidden');  // second class added separately
+const el = parent.createEl("div", { cls: "obsiterm-search-overlay" });
+el.classList.add("obsiterm-hidden"); // second class added separately
 ```
 
 **Layout structure:**
@@ -588,9 +594,9 @@ into the new container:
 
 ```ts
 if (this.manager.tabs.length === 0) {
-  this.manager.create(this.terminalContainer);  // fresh session
+ this.manager.create(this.terminalContainer); // fresh session
 } else {
-  this.manager.reattach(this.terminalContainer); // restore sessions
+ this.manager.reattach(this.terminalContainer); // restore sessions
 }
 ```
 
@@ -617,7 +623,10 @@ Obsidian's global scope would otherwise handle.
 plugin commands won't fire. Solution: register the hotkey on the modal's scope:
 
 ```ts
-this.scope.register(['Mod'], 'j', () => { this.close(); return false; });
+this.scope.register(["Mod"], "j", () => {
+ this.close();
+ return false;
+});
 // 'Mod' = Cmd on macOS, Ctrl on Windows/Linux
 ```
 
@@ -655,11 +664,11 @@ In `main.ts`:
 
 ```ts
 this.addCommand({
-  id: 'clear-terminal',
-  name: 'Clear terminal',
-  callback: () => {
-    this._manager?.activeTab?.terminal.clear();
-  },
+ id: "clear-terminal",
+ name: "Clear terminal",
+ callback: () => {
+  this._manager?.activeTab?.terminal.clear();
+ },
 });
 ```
 
@@ -680,7 +689,7 @@ nodePty.spawn(shellPath, ['-i', '-l'], { ... });
 Install the package, then load it in `TerminalInstance`:
 
 ```ts
-import { ImageAddon } from '@xterm/addon-image';  // example
+import { ImageAddon } from "@xterm/addon-image"; // example
 
 // In constructor, after other loadAddon calls:
 this.terminal.loadAddon(new ImageAddon());
@@ -710,17 +719,17 @@ this.pty?.resize(cols, rows);
 
 ## Key references
 
-| Topic | URL |
-|---|---|
-| Obsidian Plugin API | https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin |
-| Obsidian TypeScript types | https://github.com/obsidianmd/obsidian-api |
-| xterm.js API | https://xtermjs.org/docs/api/terminal/ |
-| xterm.js addons | https://github.com/xtermjs/xterm.js/tree/master/addons |
-| node-pty | https://github.com/microsoft/node-pty |
-| Electron native modules | https://www.electronjs.org/docs/latest/tutorial/using-native-node-modules |
-| @electron/rebuild | https://github.com/electron/rebuild |
-| PTY (pseudo-terminal) | https://man7.org/linux/man-pages/man7/pty.7.html |
-| ANSI escape codes | https://en.wikipedia.org/wiki/ANSI_escape_code |
-| MutationObserver | https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver |
-| ResizeObserver | https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver |
-| esbuild | https://esbuild.github.io/api/ |
+| Topic                     | URL                                                                       |
+| ------------------------- | ------------------------------------------------------------------------- |
+| Obsidian Plugin API       | <https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin>           |
+| Obsidian TypeScript types | <https://github.com/obsidianmd/obsidian-api>                                |
+| xterm.js API              | <https://xtermjs.org/docs/api/terminal/>                                    |
+| xterm.js addons           | <https://github.com/xtermjs/xterm.js/tree/master/addons>                    |
+| node-pty                  | <https://github.com/microsoft/node-pty>                                     |
+| Electron native modules   | <https://www.electronjs.org/docs/latest/tutorial/using-native-node-modules> |
+| @electron/rebuild         | <https://github.com/electron/rebuild>                                       |
+| PTY (pseudo-terminal)     | <https://man7.org/linux/man-pages/man7/pty.7.html>                          |
+| ANSI escape codes         | <https://en.wikipedia.org/wiki/ANSI_escape_code>                            |
+| MutationObserver          | <https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver>         |
+| ResizeObserver            | <https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver>           |
+| esbuild                   | <https://esbuild.github.io/api/>                                            |

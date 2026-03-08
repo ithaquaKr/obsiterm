@@ -126,6 +126,14 @@ export class TerminalInstance {
 		return this.searchAddon.findPrevious(term, opts);
 	}
 
+	/** Re-fit and force a full redraw after DOM reattachment. */
+	refresh(): void {
+		if (this.disposed) return;
+		this.fit();
+		this.terminal.refresh(0, this.terminal.rows - 1);
+		this.terminal.focus();
+	}
+
 	focus(): void {
 		this.terminal.focus();
 	}

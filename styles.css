@@ -144,12 +144,15 @@
 	height: 26px;
 	padding: 0;
 	border-radius: 4px;
-	font-size: 14px;
-	line-height: 1;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	transition: background-color 0.1s, color 0.1s;
+}
+
+.obsiterm-action-btn svg {
+	width: 14px;
+	height: 14px;
 }
 
 .obsiterm-action-btn:hover {
@@ -246,21 +249,20 @@
 	height: 24px;
 	padding: 0;
 	border-radius: 3px;
-	font-size: 13px;
-	line-height: 1;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	transition: background-color 0.1s, color 0.1s;
 }
 
+.obsiterm-search-btn svg {
+	width: 13px;
+	height: 13px;
+}
+
 .obsiterm-search-btn:hover {
 	background-color: var(--background-modifier-hover);
 	color: var(--text-normal);
-}
-
-.obsiterm-search-close {
-	font-size: 15px;
 }
 
 /* ── Utility ─────────────────────────────────────────────────────────────── */
@@ -270,11 +272,13 @@
 
 /* ── Floating modal variant ──────────────────────────────────────────────── */
 .obsiterm-modal {
-	width: 70vw;
-	height: 50vh;
+	width: 75vw;
+	height: 62vh;
+	border-radius: 8px;
+	overflow: hidden;
 }
 
-/* Hide Obsidian's built-in modal close button — we use Escape / toggle hotkey */
+/* Hide Obsidian's built-in modal close button — we have our own in the header */
 .obsiterm-modal .modal-close-button {
 	display: none;
 }
@@ -287,6 +291,41 @@
 	padding: 0;
 }
 
-.obsiterm-modal-content .obsiterm-xterm-wrapper {
+/* Modal header */
+.obsiterm-modal-header {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+	height: 35px;
+	padding: 0 4px 0 12px;
+	background-color: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.obsiterm-modal-title {
+	flex: 1;
+	font-size: 12px;
+	color: var(--text-muted);
+	font-family: var(--font-monospace);
+	letter-spacing: 0.02em;
+	user-select: none;
+}
+
+.obsiterm-modal-header-actions {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+/* Modal terminal area — fills remaining height, anchors the search overlay */
+.obsiterm-modal-terminal-area {
+	flex: 1;
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.obsiterm-modal-terminal-area .obsiterm-xterm-wrapper {
 	flex: 1;
 }
